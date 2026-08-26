@@ -3,6 +3,14 @@ import { getSupabase } from '@/lib/supabase';
 import { corsOptions, json, errorResponse } from '@/lib/cors';
 import type { CreateAppointmentRequest } from '@/types/auto-service.types';
 
+// Columns readable via the anon/authenticated role after the 2026-08-26 RLS
+// hardening (column-level GRANT excludes customer PII -- name/phone/email/
+// vehicle plate/mileage/problem description). `select('*')` or `.select()`
+// with no args fails outright under a partial column grant, so every read
+// here must name exactly the columns this route actually needs.
+const APPOINTMENT_SAFE_COLUMNS =
+  'id, confirmation_number, status, mechanic_id, service_id, vehicle_make, vehicle_model, vehicle_year, slot_date, slot_start_time, idempotency_key';
+
 export async function OPTIONS(): Promise<Response> {
   return corsOptions();
 }
@@ -50,7 +58,7 @@ function validateRequest(body: CreateAppointmentRequest): string | null {
 async function findByIdempotencyKey(key: string): Promise<unknown | null> {
   const { data } = await getSupabase()
     .from('appointments')
-    .select('*')
+    .select(APPOINTMENT_SAFE_COLUMNS)
     .eq('idempotency_key', key)
     .single();
   return data ? buildResponse(data) : null;
@@ -111,7 +119,11 @@ async function createAppointment(
     idempotency_key: idempotencyKey,
   };
 
-  const { data, error } = await getSupabase().from('appointments').insert(row).select().single();
+  const { data, error } = await getSupabase()
+    .from('appointments')
+    .insert(row)
+    .select(APPOINTMENT_SAFE_COLUMNS)
+    .single();
 
   if (error) {
     throw new Error(`DB insert failed: ${error.message}`);
