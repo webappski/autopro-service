@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { getSupabase } from '@/lib/supabase';
 import { corsOptions, json, errorResponse } from '@/lib/cors';
+import { ANY_MECHANIC, pickFreeMechanic } from '@/lib/mechanic-slots';
 import type { CreateAppointmentRequest } from '@/types/auto-service.types';
 
 // Columns readable via the anon/authenticated role after the 2026-08-26 RLS
@@ -31,12 +32,22 @@ export async function POST(req: NextRequest): Promise<Response> {
       }
     }
 
-    const isAvailable = await checkSlotAvailable(body.mechanicId, body.slotDate, body.slotStartTime);
+    // "Any mechanic": assign the first mechanic (for the service) who is working
+    // and free at that time — the slot list the widget offered was their union.
+    const mechanicId = body.mechanicId === ANY_MECHANIC
+      ? await pickFreeMechanic(body.serviceId, body.slotDate, body.slotStartTime)
+      : body.mechanicId;
+    if (!mechanicId) {
+      return errorResponse('No mechanic is free at this time', 409);
+    }
+    const resolved: CreateAppointmentRequest = { ...body, mechanicId };
+
+    const isAvailable = await checkSlotAvailable(resolved.mechanicId, resolved.slotDate, resolved.slotStartTime);
     if (!isAvailable) {
       return errorResponse('This time slot is no longer available', 409);
     }
 
-    const appointment = await createAppointment(body, idempotencyKey);
+    const appointment = await createAppointment(resolved, idempotencyKey);
     return json(appointment, 201);
   } catch (err) {
     console.error('[api/appointments] Error:', err);
