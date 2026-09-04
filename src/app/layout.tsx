@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import TypelessFormLoader from '@/components/TypelessForm';
+import TypelessityLoader from '@/components/TypelessityLoader';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -19,6 +20,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </div>
         <Footer />
         <TypelessFormLoader />
+        <TypelessityLoader />
       </body>
     </html>
   );
