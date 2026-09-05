@@ -1,7 +1,10 @@
 'use client';
 import { useEffect } from 'react';
 
-const WIDGET_SRC = 'https://typelessity-widget.vercel.app/widget.js';
+// `?v=` busts the year-long immutable cache the CDN used to send for the bare
+// bundle (typelessity ledger 2026-09-05, D-17). Bump on every widget release.
+const WIDGET_VERSION = '20260905';
+const WIDGET_SRC = `https://typelessity-widget.vercel.app/widget.js?v=${WIDGET_VERSION}`;
 const API_URL = 'https://typelessity.vercel.app';
 const CONFIG_ID = 'db274287-6f68-4acb-9b0e-6c7d431b46fd';
 
