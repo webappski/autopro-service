@@ -6,7 +6,8 @@ import { useEffect } from 'react';
 const WIDGET_VERSION = '20260905b';
 const WIDGET_SRC = `https://typelessity-widget.vercel.app/widget.js?v=${WIDGET_VERSION}`;
 const API_URL = 'https://typelessity.vercel.app';
-const CONFIG_ID = 'db274287-6f68-4acb-9b0e-6c7d431b46fd';
+// Published from the webappski portal on 2026-09-05 (paste flow, allowAny mechanic).
+const CONFIG_ID = '8ae0098e-5874-4479-9ae5-1fddab8c6f73';
 
 export default function TypelessityLoader() {
   useEffect(() => {
